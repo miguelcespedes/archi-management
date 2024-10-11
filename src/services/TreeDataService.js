@@ -1,31 +1,52 @@
 // src/services/TreeDataService.js
 
-import { XMLParser } from '../domain/XMLParser.js';
 import { Logger } from '../utils/Logger.js';
 
 export class TreeDataService {
     static parseAndTransformToTree(xmlContent) {
-        Logger.info("[INFO] Iniciando el parseo del contenido XML para la estructura del árbol.");
-        const rootNode = XMLParser.parse(xmlContent);
+        Logger.info("[INFO] Parseando y transformando el contenido XML a estructura de árbol.");
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlContent, 'application/xml');
+        const rootElement = xmlDoc.documentElement;
 
-        if (!rootNode) {
-            Logger.error("[ERROR] No se pudo obtener el nodo raíz del XML.");
+        if (!rootElement) {
+            Logger.error("[ERROR] No se pudo obtener el elemento raíz del XML.");
             return null;
         }
 
-        return TreeDataService.transformToTreeFormat(rootNode);
-    }
-
-    static transformToTreeFormat(node) {
-        const treeNode = {
-            text: node.name,
-            id: node.id,
-            type: node.type,
+        const transformedTree = {
+            text: rootElement.getAttribute('name') || 'Modelo Completo',
             expanded: true,
-            children: node.children.map(child => TreeDataService.transformToTreeFormat(child)),
-            leaf: node.isLeaf()
+            children: TreeDataService.parseChildren(rootElement)
         };
 
-        return treeNode;
+        Logger.info("[INFO] Transformación del contenido XML completada.");
+        return transformedTree;
+    }
+
+    static parseChildren(element) {
+        const children = [];
+
+        Array.from(element.children).forEach((child) => {
+            if (child.children.length > 0) {
+                Logger.info(`[INFO] Parseando carpeta: ${child.getAttribute('name') || 'Carpeta sin nombre'}`);
+                children.push({
+                    text: child.getAttribute('name') || 'Carpeta sin nombre',
+                    expanded: true,
+                    children: TreeDataService.parseChildren(child),
+                    id: child.getAttribute('id') || 'node-' + Math.random().toString(36).substr(2, 9),
+                    leaf: false
+                });
+            } else {
+                Logger.info(`[INFO] Parseando elemento: ${child.getAttribute('name') || 'Elemento sin nombre'}`);
+                children.push({
+                    text: child.getAttribute('name') || 'Elemento sin nombre',
+                    id: child.getAttribute('id') || 'node-' + Math.random().toString(36).substr(2, 9),
+                    leaf: true
+                });
+            }
+        });
+
+        return children;
     }
 }

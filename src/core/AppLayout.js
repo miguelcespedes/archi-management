@@ -11,6 +11,7 @@ export class AppLayout {
 
     initialize() {
         Logger.info("[INFO] Inicializando el layout de la aplicación...");
+
         this.toolbar = Ext.create('Ext.toolbar.Toolbar', {
             region: 'north',
             items: [
@@ -24,6 +25,7 @@ export class AppLayout {
                             const file = field.fileInputEl.dom.files[0];
                             if (file) {
                                 Logger.info(`[INFO] Archivo seleccionado: ${file.name}`);
+                                this.onFileLoadCallback(file);
                                 field.reset(); // Reiniciar el campo de archivo para permitir cargar el mismo archivo nuevamente
                             }
                         }
@@ -49,7 +51,14 @@ export class AppLayout {
             split: true,
             collapsible: true,
             rootVisible: false,
-            id: 'treePanel'
+            id: 'treePanel',
+            store: Ext.create('Ext.data.TreeStore', {
+                root: {
+                    text: 'Modelo Completo',
+                    expanded: true,
+                    children: []
+                }
+            })
         });
 
         this.viewport = Ext.create('Ext.container.Viewport', {
@@ -73,5 +82,9 @@ export class AppLayout {
 
     getDetailPanel() {
         return Ext.getCmp('detailPanel');
+    }
+
+    setFileLoadHandler(callback) {
+        this.onFileLoadCallback = callback;
     }
 }

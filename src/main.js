@@ -13,7 +13,7 @@ Ext.onReady(function () {
     const app = new App();
     app.initialize();
 
-    // Esperar a que el layout esté completamente inicializado antes de continuar
+    // Obtener el layout de la aplicación
     const appLayout = app.getLayout();
 
     if (appLayout) {
@@ -23,8 +23,9 @@ Ext.onReady(function () {
         const detailInteractionHandler = new DetailInteractionHandler(appLayout);
 
         // Configurar el flujo de la experiencia del usuario
-        fileUploadHandler.onFileLoad((xmlContent) => {
-            treeInteractionHandler.updateTree(xmlContent);
+        fileUploadHandler.onFileLoad((file) => {
+            Logger.info(`[INFO] Archivo cargado: ${file.name}`);
+            treeInteractionHandler.updateTree(file);
 
             treeInteractionHandler.onNodeClick((node) => {
                 detailInteractionHandler.updateDetail(node);

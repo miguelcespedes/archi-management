@@ -12,7 +12,13 @@ export class App {
         Logger.info("[INFO] Inicializando la aplicación...");
         this.layout = new AppLayout();
         this.layout.initialize();
+        this.layout.setFileLoadHandler(this.onFileLoad.bind(this));
         Logger.info("[INFO] Aplicación inicializada con éxito.");
+    }
+
+    onFileLoad(file) {
+        Logger.info(`[INFO] Archivo cargado: ${file.name}`);
+        // Aquí puedes continuar con el procesamiento del archivo
     }
 
     getLayout() {

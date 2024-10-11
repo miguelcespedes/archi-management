@@ -22,7 +22,7 @@ export class TreeInteractionHandler {
             const rootNode = TreeDataService.parseAndTransformToTree(xmlContent);
             if (rootNode) {
                 Logger.info("[INFO] Actualizando la estructura del árbol con los nodos obtenidos.");
-                this.treeComponent.updateTree(xmlContent); // Cambiado para pasar xmlContent para debugear correctamente
+                this.treeComponent.updateTree(rootNode);
             } else {
                 Logger.error("[ERROR] No se pudo obtener la estructura del árbol a partir del archivo.");
             }
