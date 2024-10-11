@@ -1,27 +1,25 @@
 // src/ui/handlers/FileUploadHandler.js
 
-import { FileProcessor } from '../../services/FileProcessor.js';
 import { Logger } from '../../utils/Logger.js';
 
 export class FileUploadHandler {
     constructor(appLayout) {
-        this.fileInput = document.getElementById('fileInput');
-        this.initFileInputListener(appLayout);
+        this.fileField = appLayout.toolbar.down('filefield');
+        this.initFileFieldListener();
     }
 
-    initFileInputListener(appLayout) {
-        if (this.fileInput) {
-            this.fileInput.addEventListener('change', (event) => {
-                const file = event.target.files[0];
+    initFileFieldListener() {
+        if (this.fileField) {
+            this.fileField.on('change', (field, value) => {
+                const file = field.fileInputEl.dom.files[0];
                 if (file) {
                     Logger.info(`[INFO] Archivo seleccionado: ${file.name}`);
-                    FileProcessor.processFile(file, (xmlContent) => {
-                        this.onFileLoadCallback(xmlContent);
-                    });
+                    this.onFileLoadCallback(file);
+                    field.reset(); // Reiniciar el campo de archivo para permitir cargar el mismo archivo nuevamente
                 }
             });
         } else {
-            Logger.error("[ERROR] No se encontró el elemento de entrada de archivo.");
+            Logger.error("[ERROR] No se encontró el componente de entrada de archivo.");
         }
     }
 
