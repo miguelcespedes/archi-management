@@ -4,26 +4,40 @@ import { Logger } from '../../utils/Logger.js';
 
 export class FileUploadHandler {
     constructor(appLayout) {
-        this.fileField = appLayout.toolbar.down('filefield');
-        this.initFileFieldListener();
-    }
-
-    initFileFieldListener() {
-        if (this.fileField) {
-            this.fileField.on('change', (field, value) => {
-                const file = field.fileInputEl.dom.files[0];
-                if (file) {
-                    Logger.info(`[INFO] Archivo seleccionado: ${file.name}`);
-                    this.onFileLoadCallback(file);
-                    field.reset(); // Reiniciar el campo de archivo para permitir cargar el mismo archivo nuevamente
-                }
-            });
-        } else {
-            Logger.error("[ERROR] No se encontró el componente de entrada de archivo.");
+        const fileInputField = appLayout.getFileInputField();
+        if (!fileInputField || typeof fileInputField.on !== 'function') {
+            Logger.error("[ERROR] No se encontró el campo de entrada de archivo o no es válido.");
+            return;
         }
+
+        this.fileInputField = fileInputField;
+        this.initListeners();
     }
 
-    onFileLoad(callback) {
-        this.onFileLoadCallback = callback;
+    initListeners() {
+        Logger.info("[INFO] Configurando el listener para la carga de archivos.");
+        this.fileInputField.on('change', this.onFileChange.bind(this));
+    }
+
+    onFileChange(field, value) {
+        const file = field.fileInputEl.dom.files[0];
+        if (!file) {
+            Logger.warn("[WARN] No se seleccionó ningún archivo.");
+            return;
+        }
+
+        Logger.info(`[INFO] Archivo seleccionado: ${file.name}`);
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            Logger.info("[INFO] Cargando contenido del archivo...");
+            const xmlContent = e.target.result;
+            this.onFileLoad(xmlContent);
+        };
+        reader.readAsText(file);
+    }
+
+    setOnFileLoadCallback(callback) {
+        this.onFileLoad = callback;
+        Logger.info("[INFO] Callback onFileLoad configurado con éxito.");
     }
 }

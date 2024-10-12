@@ -17,31 +17,33 @@ export class TreeDataService {
         const transformedTree = {
             text: rootElement.getAttribute('name') || 'Modelo Completo',
             expanded: true,
-            children: TreeDataService.parseChildren(rootElement)
+            children: TreeDataService.processFolders(rootElement)
         };
 
         Logger.info("[INFO] Transformación del contenido XML completada.");
         return transformedTree;
     }
 
-    static parseChildren(element) {
+    static processFolders(element) {
         const children = [];
 
         Array.from(element.children).forEach((child) => {
-            const isFolder = child.nodeName.toLowerCase() === 'folder';
-
-            if (isFolder) {
+            if (child.nodeName.toLowerCase() === 'folder') {
                 Logger.info(`[INFO] Parseando carpeta: ${child.getAttribute('name') || 'Carpeta sin nombre'}`);
                 children.push({
                     text: child.getAttribute('name') || 'Carpeta sin nombre',
-                    expanded: true,
-                    children: TreeDataService.parseChildren(child),
+                    expanded: false,
+                    children: TreeDataService.processFolders(child),
                     id: child.getAttribute('id') || 'node-' + Math.random().toString(36).substr(2, 9),
                     leaf: false,
                     type: child.getAttribute('type') || 'folder'
                 });
             } else {
                 Logger.info(`[INFO] Parseando elemento: ${child.getAttribute('name') || 'Elemento sin nombre'}`);
+                const attributes = Array.from(child.attributes).reduce((acc, attr) => {
+                    acc[attr.name] = attr.value;
+                    return acc;
+                }, {});
                 const documentation = child.querySelector('documentation') ? child.querySelector('documentation').textContent.trim() : null;
                 const properties = Array.from(child.querySelectorAll('property')).map(prop => ({
                     key: prop.getAttribute('key'),
@@ -50,14 +52,17 @@ export class TreeDataService {
                 const source = child.getAttribute('source');
                 const target = child.getAttribute('target');
                 children.push({
-                    text: child.getAttribute('name') || 'Elemento sin nombre',
+                    text: child.getAttribute('name') || child.nodeName,
                     id: child.getAttribute('id') || 'node-' + Math.random().toString(36).substr(2, 9),
                     leaf: true,
-                    documentation: documentation,
-                    properties: properties,
-                    type: child.getAttribute('xsi:type') || 'element',
-                    source: source || null,
-                    target: target || null
+                    data: {
+                        tagName: child.nodeName,
+                        attributes: attributes,
+                        documentation: documentation,
+                        properties: properties,
+                        source: source || null,
+                        target: target || null
+                    }
                 });
             }
         });
