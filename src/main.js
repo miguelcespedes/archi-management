@@ -1,4 +1,51 @@
-Ext.onReady(function() {
+Ext.onReady(function () {
+    // Crear la ventana modal (wizard)
+    const fileUploadWindow = Ext.create('Ext.window.Window', {
+        title: 'Archi Management',
+        modal: true,
+        closable: false, // No se puede cerrar hasta que se cargue el archivo
+        width: 400,
+        height: 200,
+        layout: 'fit',
+        items: [
+            {
+                xtype: 'form',
+                bodyPadding: 10,
+                items: [
+                    {
+                        xtype: 'box',
+                        html: '<h3>Please upload your Archimate file to begin</h3>',
+                        style: 'text-align: center; margin-bottom: 10px;'
+                    },
+                    {
+                        xtype: 'filefield',
+                        fieldLabel: 'Upload File',
+                        labelWidth: 100,
+                        width: '100%',
+                        buttonText: 'Browse...',
+                        listeners: {
+                            change: function (field, value, eOpts) {
+                                const file = field.fileInputEl.dom.files[0]; // Acceder al archivo cargado
+                                if (file) {
+                                    const reader = new FileReader(); // Crear un objeto FileReader para leer el archivo
+                                    reader.onload = function (e) {
+                                        const parser = new DOMParser(); // Crear un DOMParser para convertir el archivo en XML
+                                        const xmlDoc = parser.parseFromString(e.target.result, "application/xml"); // Parsear el archivo XML
+                                        loadTreeData(xmlDoc); // Llamar a la función para cargar los datos en el árbol
+                                        fileUploadWindow.close(); // Cerrar la ventana modal automáticamente después de cargar
+                                    };
+                                    reader.readAsText(file); // Leer el contenido del archivo como texto
+                                }
+                            }
+                        }
+                    }
+                ]
+            }
+        ]
+    });
+
+    fileUploadWindow.show(); // Mostrar la ventana modal
+
     // Crear un Viewport que organiza los componentes en un diseño de "border" (con áreas: norte, oeste, centro)
     Ext.create('Ext.container.Viewport', {
         layout: 'border', // Define el layout de tipo 'border' con regiones
@@ -12,38 +59,15 @@ Ext.onReady(function() {
                     // Caja que muestra el título de la aplicación
                     {
                         xtype: 'box',
-                        html: '<span style="color: white;">Archimate XML Parser</span>',
+                        html: '<h2 style="color: #04408c; margin-left:5px;">Archi Management</h2>',
                         style: 'margin-right: 10px;' // Espaciado a la derecha
-                    },
-                    // Campo para cargar archivos con un botón para examinar
-                    {
-                        xtype: 'filefield', // Campo para cargar archivos
-                        fieldLabel: 'Cargar archivo', // Etiqueta del campo
-                        labelWidth: 100, // Ancho de la etiqueta
-                        width: 300, // Ancho del campo
-                        buttonText: 'Examinar...', // Texto del botón de examinar
-                        listeners: {
-                            // Listener que se activa cuando el archivo cambia (se selecciona un archivo nuevo)
-                            change: function(field, value, eOpts) {
-                                const file = field.fileInputEl.dom.files[0]; // Acceder al archivo cargado
-                                if (file) {
-                                    const reader = new FileReader(); // Crear un objeto FileReader para leer el archivo
-                                    reader.onload = function(e) {
-                                        const parser = new DOMParser(); // Crear un DOMParser para convertir el archivo en XML
-                                        const xmlDoc = parser.parseFromString(e.target.result, "application/xml"); // Parsear el archivo XML
-                                        loadTreeData(xmlDoc); // Llamar a la función para cargar los datos en el árbol
-                                    };
-                                    reader.readAsText(file); // Leer el contenido del archivo como texto
-                                }
-                            }
-                        }
                     }
                 ]
             },
             // Región oeste, contiene el árbol de carpetas Archimate
             {
                 region: 'west', // Coloca el treepanel en la parte izquierda (oeste)
-                title: 'Archimate Folders', // Título del panel
+                title: 'Project', // Título del panel
                 xtype: 'treepanel', // Tipo de componente: panel de árbol
                 width: 300, // Ancho del panel
                 split: true, // Habilita la barra divisoria para redimensionar
@@ -58,21 +82,21 @@ Ext.onReady(function() {
                 },
                 listeners: {
                     // Listener que se activa cuando se hace clic en un nodo del árbol
-                    itemclick: function(view, record, item, index, event, eOpts) {
-                        console.log('Nodo seleccionado:', record); // Registro de información del nodo seleccionado
+                    itemclick: function (view, record, item, index, event, eOpts) {
+                        console.log('Selected node:', record); // Registro de información del nodo seleccionado
                         const elementData = record.get('data'); // Obtener datos del nodo
                         if (elementData) {
                             // Si el nodo tiene datos, muestra los detalles del elemento
-                            console.log('Datos del nodo:', elementData);
+                            console.log('Node data:', elementData);
                             displayDetails(elementData, record.get('text'));
                         } else {
                             // Si no tiene datos, intenta obtener la información desde "raw"
-                            console.log('No se encontraron datos para el nodo seleccionado, intentando usar raw datos.');
-                            console.log('Datos en raw:', record.raw);
+                            console.log('No data found for the selected node, attempting to use raw data.');
+                            console.log('Raw data:', record.raw);
                             if (record.raw && record.raw.data) {
                                 displayDetails(record.raw.data, record.raw.text); // Mostrar detalles desde raw
                             } else {
-                                console.log('No se pudo obtener información detallada para el nodo seleccionado.');
+                                console.log('Detailed information for the selected node could not be retrieved.');
                             }
                         }
                     }
@@ -82,34 +106,30 @@ Ext.onReady(function() {
             {
                 region: 'center', // Coloca el panel en el centro
                 xtype: 'panel', // Tipo de componente: panel
-                title: 'Detalles del Elemento', // Título del panel
+                title: 'Properties', // Título del panel
                 id: 'detailsPanel', // Identificador del panel
                 autoScroll: true, // Habilita el scroll automático
                 bodyPadding: 10, // Espaciado interno (padding)
                 html: '<div id="detailsContainer"></div>' // Contenedor para los detalles
             },
-            // Añadir el footer en la región sur (south)
-            
             {
                 region: 'south', // Coloca el footer en la parte inferior (sur)
                 xtype: 'panel', // Tipo de componente: panel
-                height: 40, // Aumentar la altura del footer para dar espacio al botón
+                height: 40, // Altura del footer
                 bodyStyle: 'text-align: center; padding: 10px; background-color: #f1f1f1;', // Estilos del panel
                 html: `
                     <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
                         <p style="margin: 0;">
-                            Distribuido bajo la 
+                            Released under the 
                             <a href="https://opensource.org/licenses/MIT" target="_blank" style="text-decoration: none; color: #000;">
-                                Licencia MIT
+                                MIT License
+                            </a> - Developed by <a href="https://github.com/miguelcespedes" target="_blank" style="text-decoration: none; color: #000;">
+                                Miguel Céspedes
                             </a>
                         </p>
-                        
-                ` // Contenido del footer mejorado y alineado
+                    </div>
+                ` // Contenido del footer con la licencia y enlace a GitHub
             }
-            
-            
-            
-            
             
         ]
     });
@@ -119,14 +139,14 @@ Ext.onReady(function() {
     // Función para cargar los datos XML en el árbol
     function loadTreeData(xmlDoc) {
         const modelElement = xmlDoc.getElementsByTagName('archimate:model')[0]; // Obtener el elemento raíz del modelo Archimate
-        const projectName = modelElement.getAttribute('name') || 'Sin nombre'; // Obtener el nombre del proyecto o "Sin nombre"
+        const projectName = modelElement.getAttribute('name') || 'Untitled'; // Obtener el nombre del proyecto o "Untitled"
         const rootFolders = xmlDoc.getElementsByTagName('folder'); // Obtener todas las carpetas del archivo XML
         const treeData = []; // Array que contendrá los datos para el árbol
 
         // Función para procesar cada carpeta y sus elementos hijos
         function processFolder(folder) {
             const folderNode = {
-                text: folder.getAttribute('name') || 'Sin nombre', // Nombre de la carpeta o "Sin nombre"
+                text: folder.getAttribute('name') || 'Untitled', // Nombre de la carpeta o "Untitled"
                 expanded: false, // No expandir automáticamente
                 children: [], // Inicialmente sin hijos
                 data: null // Nodo sin datos asociados
@@ -165,7 +185,7 @@ Ext.onReady(function() {
             }
         }
 
-        console.log('Datos del árbol:', treeData); // Registro de los datos del árbol
+        console.log('Tree data:', treeData); // Registro de los datos del árbol
         treePanel.setRootNode({
             text: projectName, // Nombre del proyecto como texto del nodo raíz
             expanded: true, // Expandir automáticamente el nodo raíz
@@ -175,10 +195,10 @@ Ext.onReady(function() {
 
     // Función para mostrar los detalles del elemento seleccionado
     function displayDetails(elementData, tagName) {
-        console.log('Mostrando detalles para:', elementData, 'TagName:', tagName); // Registro del elemento y su tagName
+        console.log('Displaying details for:', elementData, 'TagName:', tagName); // Registro del elemento y su tagName
         const detailsPanel = Ext.getCmp('detailsPanel'); // Obtener el panel de detalles por su ID
         let detailsHtml = '<table style="width: 100%; border-collapse: collapse;">'; // Iniciar tabla de detalles
-        detailsHtml += '<thead><tr><th style="border: 1px solid black; padding: 8px;">Propiedad</th><th style="border: 1px solid black; padding: 8px;">Valor</th></tr></thead><tbody>';
+        detailsHtml += '<thead><tr><th style="border: 1px solid black; padding: 8px;">Property</th><th style="border: 1px solid black; padding: 8px;">Value</th></tr></thead><tbody>';
 
         // Iterar sobre los atributos del elemento y agregar filas a la tabla
         const properties = Object.keys(elementData.attributes);
@@ -187,7 +207,7 @@ Ext.onReady(function() {
         }
 
         detailsHtml += '</tbody></table>'; // Finalizar la tabla
-        detailsHtml += `<h3>Contenido HTML del elemento ${tagName}:</h3>`; // Título para el contenido HTML
+        detailsHtml += `<h3>HTML content of ${tagName} element:</h3>`; // Título para el contenido HTML
         detailsHtml += `<div style="border: 1px solid black; padding: 10px; margin-top: 10px;">${Ext.htmlEncode(elementData.innerHTML)}</div>`; // Mostrar contenido HTML
 
         detailsPanel.update(detailsHtml); // Actualizar el panel de detalles con el nuevo contenido
