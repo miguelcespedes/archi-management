@@ -121,7 +121,7 @@ Ext.onReady(function () {
                     <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
                         <p style="margin: 0;">
                             Released under the 
-                            <a href="https://opensource.org/licenses/MIT" target="_blank" style="text-decoration: none; color: #000;">
+                            <a href="https://github.com/miguelcespedes/archi-management-tool" target="_blank" style="text-decoration: none; color: #000;">
                                 MIT License
                             </a> - Developed by <a href="https://github.com/miguelcespedes" target="_blank" style="text-decoration: none; color: #000;">
                                 Miguel Céspedes
