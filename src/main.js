@@ -1,7 +1,7 @@
 Ext.onReady(function () {
     // Crear la ventana modal (wizard)
     const fileUploadWindow = Ext.create('Ext.window.Window', {
-        title: 'Archi Management',
+        title: 'Archi Management Tool',
         modal: true,
         closable: false, // No se puede cerrar hasta que se cargue el archivo
         width: 400,
@@ -59,7 +59,7 @@ Ext.onReady(function () {
                     // Caja que muestra el título de la aplicación
                     {
                         xtype: 'box',
-                        html: '<h2 style="color: #04408c; margin-left:5px;">Archi Management</h2>',
+                        html: '<h2 style="color: #04408c; margin-left:5px;">Archi Management Tool</h2>',
                         style: 'margin-right: 10px;' // Espaciado a la derecha
                     }
                 ]
