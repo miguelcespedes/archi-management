@@ -5,11 +5,11 @@ export class Logger {
         console.info(message);
     }
 
-    static error(message) {
-        console.error(message);
-    }
-
     static warn(message) {
         console.warn(message);
+    }
+
+    static error(message) {
+        console.error(message);
     }
 }

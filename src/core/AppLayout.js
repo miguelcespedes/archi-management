@@ -6,46 +6,64 @@ export class AppLayout {
     constructor() {
         this.viewport = null;
         this.onFileLoadCallback = null;
+        this.fileInputField = null;
+        this.uploadButton = null;
+        this.mainPanel = null;
     }
 
     initialize() {
         Logger.info("[INFO] Inicializando el layout de la aplicación...");
 
-        this.viewport = Ext.create('Ext.container.Viewport', {
-            layout: 'border',
-            items: [
-                this.createNorthToolbar(),
-                this.createWestTreePanel(),
-                this.createCenterDetailPanel()
-            ]
-        });
+        this.initComponents();
+        this.renderLayout();
 
         Logger.info("[INFO] Layout de la aplicación inicializado con éxito.");
     }
 
-    createNorthToolbar() {
-        return {
-            region: 'north',
-            xtype: 'toolbar',
-            height: 50,
+    initComponents() {
+        // Crear y almacenar referencias a los componentes
+        this.fileInputField = Ext.create('Ext.form.field.File', {
+            fieldLabel: 'Cargar archivo',
+            labelWidth: 100,
+            width: 300,
+            buttonText: 'Examinar...',
+            listeners: {
+                change: this.onFileChange.bind(this)
+            }
+        });
+
+        this.uploadButton = Ext.create('Ext.Button', {
+            text: 'Subir',
+            margin: '0 0 0 10',
+            handler: this.onUploadButtonClick.bind(this)
+        });
+
+        this.mainPanel = Ext.create('Ext.container.Viewport', {
+            layout: 'border',
             items: [
                 {
-                    xtype: 'box',
-                    html: '<span style="color: white;">Archimate XML Parser</span>',
-                    style: 'margin-right: 10px;'
+                    region: 'north',
+                    xtype: 'toolbar',
+                    height: 50,
+                    items: [
+                        {
+                            xtype: 'box',
+                            html: '<span style="color: white;">Archimate XML Parser</span>',
+                            style: 'margin-right: 10px;'
+                        },
+                        this.fileInputField,
+                        this.uploadButton
+                    ]
                 },
-                {
-                    xtype: 'filefield',
-                    fieldLabel: 'Cargar archivo',
-                    labelWidth: 100,
-                    width: 300,
-                    buttonText: 'Examinar...',
-                    listeners: {
-                        change: this.onFileChange.bind(this)
-                    }
-                }
+                this.createWestTreePanel(),
+                this.createCenterDetailPanel()
             ]
-        };
+        });
+    }
+
+    renderLayout() {
+        // El Viewport ya se agrega automáticamente, no es necesario hacer Ext.Viewport.add()
+        // Si usas Ext.create('Ext.container.Viewport', {...}), se renderiza automáticamente.
     }
 
     createWestTreePanel() {
@@ -80,6 +98,15 @@ export class AppLayout {
         };
     }
 
+    // Agregar los métodos getFileInputField y getUploadButton
+    getFileInputField() {
+        return this.fileInputField;
+    }
+
+    getUploadButton() {
+        return this.uploadButton;
+    }
+
     setFileLoadHandler(callback) {
         this.onFileLoadCallback = callback;
         Logger.info("[INFO] Callback onFileLoad configurado con éxito.");
@@ -104,6 +131,13 @@ export class AppLayout {
             }
         };
         reader.readAsText(file);
+    }
+
+    // Método para manejar el clic del botón de subir (si es necesario)
+    onUploadButtonClick() {
+        // Aquí puedes manejar la lógica de subida del archivo si es diferente
+        // Por ejemplo, puedes llamar a onFileChange manualmente o realizar otras acciones
+        this.onFileChange(this.fileInputField);
     }
 
     getTreePanel() {

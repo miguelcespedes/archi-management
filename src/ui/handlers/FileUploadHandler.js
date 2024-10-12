@@ -1,43 +1,31 @@
 // src/ui/handlers/FileUploadHandler.js
 
 import { Logger } from '../../utils/Logger.js';
+import { XMLParser } from '../../domain/XMLParser.js';
 
 export class FileUploadHandler {
     constructor(appLayout) {
-        const fileInputField = appLayout.getFileInputField();
-        if (!fileInputField || typeof fileInputField.on !== 'function') {
-            Logger.error("[ERROR] No se encontró el campo de entrada de archivo o no es válido.");
-            return;
-        }
-
-        this.fileInputField = fileInputField;
-        this.initListeners();
+        this.appLayout = appLayout;
     }
 
-    initListeners() {
-        Logger.info("[INFO] Configurando el listener para la carga de archivos.");
-        this.fileInputField.on('change', this.onFileChange.bind(this));
-    }
+    // Agregar el método processFileContent
+    processFileContent(xmlContent) {
+        Logger.info("[INFO] Procesando el contenido del archivo XML...");
 
-    onFileChange(field, value) {
-        const file = field.fileInputEl.dom.files[0];
-        if (!file) {
-            Logger.warn("[WARN] No se seleccionó ningún archivo.");
-            return;
-        }
+        // Aquí puedes parsear el XML y actualizar la interfaz de usuario
+        // Por ejemplo, utilizando un XMLParser y actualizando el TreePanel
 
-        Logger.info(`[INFO] Archivo seleccionado: ${file.name}`);
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            Logger.info("[INFO] Cargando contenido del archivo...");
-            const xmlContent = e.target.result;
-            this.onFileLoad(xmlContent);
-        };
-        reader.readAsText(file);
-    }
+        // Ejemplo de procesamiento:
+        const xmlParser = new XMLParser();
+        const parsedData = xmlParser.parse(xmlContent);
 
-    setOnFileLoadCallback(callback) {
-        this.onFileLoad = callback;
-        Logger.info("[INFO] Callback onFileLoad configurado con éxito.");
+        // Actualizar el TreePanel con los datos parseados
+        const treeDataService = new TreeDataService();
+        const treeStore = treeDataService.createTreeStore(parsedData);
+
+        const treePanel = this.appLayout.getTreePanel();
+        treePanel.setStore(treeStore);
+
+        Logger.info("[INFO] Contenido del archivo procesado y TreePanel actualizado.");
     }
 }

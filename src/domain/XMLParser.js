@@ -1,7 +1,5 @@
 // src/domain/XMLParser.js
 
-import { Node } from './Node.js';
-
 export class XMLParser {
     static parse(xmlContent) {
         const parser = new DOMParser();
@@ -12,28 +10,54 @@ export class XMLParser {
             return null;
         }
 
-        const rootElement = xmlDoc.documentElement;
-        const rootNode = new Node(
-            rootElement.getAttribute('id') || 'root',
-            rootElement.getAttribute('name') || 'Modelo Completo',
-            rootElement.tagName
-        );
+        const modelElement = xmlDoc.getElementsByTagName('archimate:model')[0];
+        const projectName = modelElement.getAttribute('name') || 'Sin nombre';
+        const rootFolders = xmlDoc.getElementsByTagName('folder');
+        const treeData = [];
 
-        XMLParser.parseChildren(rootElement, rootNode);
+        function processFolder(folder) {
+            const folderNode = {
+                text: folder.getAttribute('name') || 'Sin nombre',
+                expanded: false,
+                children: [],
+                data: null
+            };
 
-        return rootNode;
-    }
+            // Procesar subcarpetas
+            const subfolders = Array.from(folder.children).filter(element => element.tagName === 'folder');
+            for (let subfolder of subfolders) {
+                folderNode.children.push(processFolder(subfolder));
+            }
 
-    static parseChildren(xmlElement, parentNode) {
-        for (let child of xmlElement.children) {
-            const childNode = new Node(
-                child.getAttribute('id') || 'node-' + Math.random().toString(36).substr(2, 9),
-                child.getAttribute('name') || 'Elemento sin nombre',
-                child.tagName
-            );
+            // Procesar elementos
+            const elements = Array.from(folder.children).filter(element => element.tagName !== 'folder');
+            for (let element of elements) {
+                folderNode.children.push({
+                    text: element.getAttribute('name') || element.tagName,
+                    leaf: true,
+                    data: {
+                        tagName: element.tagName,
+                        attributes: Array.from(element.attributes).reduce((acc, attr) => {
+                            acc[attr.name] = attr.value;
+                            return acc;
+                        }, {}),
+                        innerHTML: element.innerHTML
+                    }
+                });
+            }
 
-            parentNode.addChild(childNode);
-            XMLParser.parseChildren(child, childNode);
+            return folderNode;
         }
+
+        for (let folder of rootFolders) {
+            if (folder.parentElement.tagName !== 'folder') {
+                treeData.push(processFolder(folder));
+            }
+        }
+
+        return {
+            projectName: projectName,
+            treeData: treeData
+        };
     }
 }
