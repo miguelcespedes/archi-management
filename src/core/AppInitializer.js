@@ -1,9 +1,9 @@
-// src/core/App.js
+// src/core/AppInitializer.js
 
 import { Logger } from '../utils/Logger.js';
 import { AppLayout } from './AppLayout.js';
 
-export class App {
+export class AppInitializer {
     constructor() {
         this.appLayout = null;
     }
